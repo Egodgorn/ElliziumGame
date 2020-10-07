@@ -1,0 +1,13 @@
+[gd_scene load_steps=2 format=2]
+
+[ext_resource path="res://Main.cs" type="Script" id=1]
+
+[node name="Main" type="Node"]
+script = ExtResource( 1 )
+
+[node name="Label" type="Label" parent="."]
+anchor_right = 0.266602
+anchor_bottom = 0.0633333
+__meta__ = {
+"_edit_use_anchors_": true
+}
