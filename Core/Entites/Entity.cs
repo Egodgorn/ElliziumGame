@@ -1,53 +1,41 @@
 ﻿using Godot;
 using System;
+using Ellizium.Core.FSMs;
 
 namespace Ellizium.Core.Entites
 {
-    public abstract class Entity
+    public class Entity : EGL.Nodes3D.Physics.KinematicBody
     {
-        protected EntityData Data;
-        protected EntityBody Body;
+        protected MotionData Velocity = new MotionData(0.5f);
 
-        public Vector3 Translation
-        {
-            get
-            {
-                return Body.Translation;
-            }
-            set
-            {
-                Body.Translation = value;
-            }
-        }
+        protected MeshInstance Model = new MeshInstance();
+        protected CollisionShape Collision = new CollisionShape();
 
-        public Entity(Mesh mesh, Shape shape)
-        {
-            Data = new EntityData();
-            Body = new EntityBody(Data, mesh, shape);
+        public object CustomData;
 
-            Body.RenderProcess += RenderProcess;
-            Body.PhysicsProcess += PhysicsProcess;
-            Body.Input += _Input;
-        }
-        public void ConnectToNode(Node parent)
+        public EntityData Data = new EntityData();
+        public FSM FSM;
+
+        public Entity()
         {
-            parent.AddChild(Body);
-        }
-        public void DisconnectFromNode(Node parent)
-        {
-            parent.RemoveChild(Body);
-        }
-        public void AddChild(Node child)
-        {
-            Body.AddChild(child);
-        }
-        public void RemoveChild(Node child)
-        {
-            Body.RemoveChild(child);
+            Base.AddChild(Model);
+            Base.AddChild(Collision);
+
+            FSM = new FSM(this);
+            PhysicsProcess += CalculatingMotion;
         }
 
-        protected abstract void RenderProcess(float delta);
-        protected abstract void PhysicsProcess(float delta);
-        protected abstract void _Input(InputEvent ev);
+        private void CalculatingMotion(float delta)
+        {
+            Velocity.Force = Velocity.Force.LinearInterpolate(Velocity.ForceInRest, Velocity.Fading);
+            Data.AdditionalVelocity.Force = Data.AdditionalVelocity.Force.LinearInterpolate(Data.AdditionalVelocity.ForceInRest, Data.AdditionalVelocity.Fading);
+            Data.MoveVelocity.Force = Data.MoveVelocity.Force.LinearInterpolate(Data.MoveVelocity.ForceInRest, Data.MoveVelocity.Fading);
+
+            Velocity.Force += Data.AdditionalVelocity.Force;
+            Velocity.Force += Data.MoveVelocity.Force;
+            Velocity.Force.y -= Data.Gravity;
+
+            Velocity.Force = Base.MoveAndSlide(Velocity.Force, Vector3.Up);
+        }
     }
 }

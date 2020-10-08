@@ -1,19 +1,21 @@
 using Godot;
 using System;
-using Ellizium.Game.Character;
 using Ellizium.Core.Generation.Chunks;
 using Ellizium.Core.Generation.Worlds;
+
+using Ellizium.Game.Test;
 
 public class Main : Node
 {
     public static Action<float> Render = null;
     public static Action<float> Physics = null;
+    public static Action<InputEvent> InputProcess = null;
 
     private ChunkGenerator Generator;
     private OpenSimplexNoise Noise;
     private Node Separator;
 
-    public static Label Label;
+    public static Label Label { get; private set; }
 
     public override void _Ready()
     {
@@ -21,6 +23,28 @@ public class Main : Node
 
         Label = (Label)GetNode("Label");
 
+        TestPlayer player = new TestPlayer(new CubeMesh(), new BoxShape());
+
+        AddChild(player.Base);
+    }
+
+    public override void _Process(float delta)
+    {
+        Render?.Invoke(delta);
+    }
+    public override void _PhysicsProcess(float delta)
+    {
+        Physics?.Invoke(delta);
+    }
+    public override void _Input(InputEvent ev)
+    {
+        InputProcess?.Invoke(ev);
+    }
+
+
+    //Test
+    private void TestChunkGenerator()
+    {
         Separator = new Node();
 
         Observer observer = new Observer();
@@ -35,23 +59,13 @@ public class Main : Node
         Noise.Persistence = 0.3f;
         Generator = new ChunkGenerator(0.5f, Noise);
 
+        InputProcess += ControlChunkGenerator;
+
         Generator.ChunkReady += ConnectChunk;
     }
-
-    public override void _Process(float delta)
+    private void ControlChunkGenerator(InputEvent ev)
     {
-        if(Render != null)
-            Render(delta);
-    }
-    public override void _PhysicsProcess(float delta)
-    {
-        if (Physics != null)
-            Physics(delta);
-    }
-
-    public override void _Input(InputEvent ev)
-    {
-        if(ev is InputEventKey key && key.Scancode == (int)KeyList.G && key.Pressed)
+        if (ev is InputEventKey key && key.Scancode == (int)KeyList.G && key.Pressed)
         {
             Separator.QueueFree();
 
@@ -61,7 +75,6 @@ public class Main : Node
             Test();
         }
     }
-
     private void Test()
     {
         Noise.Seed = ++Noise.Seed;
@@ -74,7 +87,6 @@ public class Main : Node
             }
         }
     }
-
     private void ConnectChunk(int indexThread, long timeGeneration)
     {
         Chunk chunk = Generator.GetChunk();

@@ -2,4 +2,9 @@
   <PropertyGroup>
     <TargetFramework>net472</TargetFramework>
   </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="EGL">
+      <HintPath>..\..\..\S.Project\EGL\bin\Release\EGL.dll</HintPath>
+    </Reference>
+  </ItemGroup>
 </Project>
